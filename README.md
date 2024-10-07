@@ -1,4 +1,6 @@
-1. ## 离散token用于多语言的识别的方法
+1. 
+
+   ## 离散token用于多语言的识别的方法
 
    ### 1.论文
 
@@ -6,14 +8,74 @@
 
      > (Shanghai Jiao Tong University & Xiaomi; Yifan Yang, Feiyu Shen, Chenpeng Du, Ziyang Ma, Kai Yu, Daniel Povey, Xie Chen; ICASSP 2024 )
 
-     ![image-20240920221429714](./assets/image-20240920221429714.png)
+     ![image-20240920221429714](./assets/image-20240920221429714-8298288.png)
 
      1. 任务： ASR & TTS
-     2. audio tokenizers：
+
+     2. 实验语言： 英语 ➕ 中文
+
+     3. 数据集：LibriSpeech , GigaSpeech , and AISHELL-1 corpora
+
+     4. audio tokenizers：
+
         * WavLM-Large
         * HuBERT-Large
         * EnCodec
         * vq-wav2vec
+
+     5. 整体框架：离散化特征提取 -》 ASR模型
+
+     6. ASR模型选择：neural Transducer architecture with Zipformer encoder（K2）
+
+     7. 实验结果：
+
+        * 实验1: 低资源LibriSpeech 的结果：使用不同类型的离散标记在 Lib-riSpeech100h 上训练的模型的 ASR 性能。使用 FBank 测试清洁和测试其他功能训练的系统相比，使用 WavLM 和 HuBERT 代币训练的系统分别提高了 17% 和 28%。从 Encodec 和 vq-wav̖vec 派生的离散令牌 的性能比 FBankfeatures 差。这揭示了 SSL 模型对于 离散令牌生成的重要性以及来自 WavLM 和 HuBERT 模 型的离散令牌在低资源数据上的优越性。
+
+          ![image-20241007170332995](./assets/image-20241007170332995.png)
+
+        * 实验2: 全量数据Librispeech结果：使用不同类型的离散标记在 LibriSpeech960h 上训练的模型的 ASR 性能。使用 WavLM 和 HuBERT large 进行训练的系统显示出与基于 FBank 的系统相比具有竞争力的性能。与表 1 中所示的 Librispeech 100 h 的观察类似，来自 Encodec 和 vq-wav̖vec 的离散标记始终比来自 HuBERT 和 WavLM 模型的离散标记更差。
+
+          > 解释：HuBERT 和 WavLM 的特征是从顶层 Transformer 层提取的，其中包含更多语义信息。还值得注意的是，离 散令牌在测试干净集上产生的 WER 结果与连续 FBank 特征相当。但相比之下，在其他测试中观察到相对较大的 WER 差距。一个可能的原因是离散标记擅长在干净的条 件下提取语义信息，但仍然无法胜任复杂的声学条件。
+
+          ![image-20241007170500638](./assets/image-20241007170500638.png)
+
+          
+
+        * 实验3:泛化实验：Gigaspeech 中从 WavLM 提取 的离散令牌始终优于 HuBERT 的离散令牌。 WavLM 的 离散token落后于连续 FBank 功能。Mandarin AISHELL 数据集中，离散标记的 WER 结果比 FBank 特征差得多。 
+
+          > Mandarin AISHELL 数据集中，离散标记的 WER 结果比 FBank 特征差得多。 回想一下，用于提取离散标记的 SSL 模型是在英语语料库中训练的，当前离散标记跨语言的泛化能力还有待改进。
+
+           ![image-20241007171004903](./assets/image-20241007171004903.png)
+
+   * Children’s Speech Recognition through Discrete Token Enhancement
+
+     > (卡塔尔计算研究所 Qatar Computing Research Institute; Vrunda N. Sukhadia, Shammur Absar Chowdhury; Interspeech 2024 ) 
+
+     ![image-20241007165240185](./assets/image-20241007165240185.png)
+
+     1. 实验语言：英语
+
+     2. 整体框架：离散化特征提取 -》 ASR模型
+
+     3. 离散化特征提取：预训练的Hubert 和 WavLM + K-means聚类（2000units，需要训练）
+
+     4. ASR模型选择：E-Branchformer encoder and Transformer decoder architecture （ESPnet实验）
+
+     5. 实验结果：
+
+        * 实验一：传统输入与离散输入: 离散令牌的性能与 HuBERT 和 WavLM 端到端模型相当，性能略有下降。与 Whisper 模型相比仍有差距。
+
+          ![image-20241007165547418](./assets/image-20241007165547418.png)
+
+        * 实验二：单模型和多模型 : 单视图设置中，WavLM 离散令牌的性能比 HuBERT 离散令牌好。（假设 WavLM 模型嵌入由于其添加的话语混合策略 而更加稳健，可以更有效地解决儿童语音的可变性。）对于多视图设置，D (MV) 的性能优于 HuBERT-D (S) 模型。然而，WavLM-D (S) 仍然优于这两种变体。（选择稳健的 SSL 模型对于利用多 视图离散令牌的力量至关重要。）
+
+        * 实验三：泛化能力：WavLM-D (S) 优于所有其他离散 ASR 系统，并且还提供了与零样本 Whisper 模型相当的结 果。
+
+          ![image-20241007165527693](./assets/image-20241007165527693.png)
+
+        * 实验三：误差分析： 探究添加噪声对模型性能的影响。由于所有离散 ASR 中存在不同的错误，多视图离散 ASR 更接近转录的逐字形式。
+
+          ![image-20241007165610873](./assets/image-20241007165610873.png)
 
    * DASB - Discrete Audio and Speech Benchmark （[speechbrain Benchmark]([benchmarks/benchmarks/DASB at main · speechbrain/benchmarks (github.com)](https://github.com/speechbrain/benchmarks/tree/main/benchmarks/DASB))）
 
@@ -27,15 +89,25 @@
      >
      > This repository can be used to benchmark new audio tokenizers reliably. It includes a benchmark on 9 audio and speech datasets using 6 popular discrete audio encoders: **semantic** (*Discrete HuBERT*, *Discrete WavLM*, *Discrete Wav2Vec2*), **compression** (*EnCodec*, *DAC*), and **hybrid** (*SpeechTokenizer*). We consider different downstream architectures for each task and report the best-performing architecture.
 
-     ![image-20240921111122824](./assets/image-20240921111122824.png)
+     ![image-20240921111122824](./assets/image-20240921111122824-8298288.png)
+
+     1. 实验语言：LibriSpeech 英语； CommonVoice 17.0 中威尔士语 (Cymraeg) 和巴斯克语 (Euskera) 
+
+        > 分别在train-clean100和dev-clean子集上进行训练和验证，同时在test-clean和 test-other子集上进行测试。
+
+     2. speechbrain 的 BiLSTM 架构 和 ContextNet架构
+
+     3. 实验结果：对于大多数判别任务，语义标记明显优于压缩标记。这种趋势是由于语义标记能够从音频信号中捕获高级信息，唯一的例外是说话人识别任务， EnCodec 在该任务中取得了最佳结果。这表明压缩令牌可以更好地编码说话者信息。
+
+        ![image-20241007181001709](./assets/image-20241007181001709.png)
 
    * dMel: Speech Tokenization made Simple
 
      > (Apple; He Bai,Tatiana Likhomanenko;arXiv:2407.15835)
 
-     ![image-20240921190853026](./assets/image-20240921190853026.png)
+     ![image-20240921190853026](./assets/image-20240921190853026-8298288.png)
 
-     ![image-20240921190839174](./assets/image-20240921190839174.png)
+     ![image-20240921190839174](./assets/image-20240921190839174-8298288.png)
 
    * SpeechGPT: Empowering Large Language Models with Intrinsic Cross-Modal Conversational Abilities
 
@@ -53,7 +125,7 @@
 
      > Zhejiang University & Alibaba Group & Fundamental AI Research (FAIR), Meta; Shengpeng Ji, Ziyue Jiang, Xize Cheng, Yifu Chen, Minghui Fang, Jialong Zuo, Qian Yang, Ruiqi Li, Ziang Zhang, Xiaoda Yang, Rongjie Huang, Yidi Jiang, Qian Chen, Siqi Zheng, Wen Wang, Zhou Zhao; arXiv:2408.16532
 
-     ![image-20240920180923228](./assets/image-20240920180923228.png)
+     ![image-20240920180923228](./assets/image-20240920180923228-8298288.png)
 
      > 所以相当于1个token 10bit ，然后对应的就是每个码本数量是1024，10位～，那100token/s代表的就是每一秒有100个采样点。
      >
@@ -106,15 +178,15 @@
    >
    > 作者通过训练一个线性分类器来验证CPC提取的特征中包含的音素。
 
-   ![image-20240921170223944](./assets/image-20240921170223944.png)
+   ![image-20240921170223944](./assets/image-20240921170223944-8298288.png)
 
-   ![image-20240921170251798](./assets/image-20240921170251798.png)
+   ![image-20240921170251798](./assets/image-20240921170251798-8298288.png)
 
    ##### 3.1.2 wav2vec: Unsupervised Pre-training for Speech Recognition
 
    > 不同于CPC文章中作者只训练一个线性层来评估预训练特征向量中包含的语义信息，wav2vec的作者们**将预训练的wav2vec模型作为特征提取器，代替人工定义的声学特征输入给ASR模型**，并且直接在多个语音识别数据集上直接与baseline ASR模型以及SOTA结果进行比较。
 
-   ![image-20240921171237096](./assets/image-20240921171237096.png)
+   ![image-20240921171237096](./assets/image-20240921171237096-8298288.png)
 
    ##### 3.1.3 vq-wav2vec: Self-Supervised Learning of Discrete Speech Representations
 
@@ -124,21 +196,21 @@
    > 2. 有了离散化的特征表示，我们便可以将作为embedding，并使用大规模无标签的语音数据训练一个BERT。
    > 3. 我们再将预训练BERT得到的语义表征作为输入，有监督地训练下游语音识别模型（AM），希望能够提升在各种语音识别任务上的性能。
 
-   ![image-20240921171550105](./assets/image-20240921171550105.png)
+   ![image-20240921171550105](./assets/image-20240921171550105-8298288.png)
 
    vq-wav2vec的整体结构如上图a所示，给定输入语音信号 X ，我们首先使用encoder网络（与wav2vec相同）进行编码得到隐变量 Z ，再通过引入量化模块（wav2vec中没有）将隐变量 Z 映射为离散化隐变量 Z^ ，最后使用 context网络（与wav2vec相同）编码历史时刻的离散化隐变量得到上下文特征向量 C 。
 
    文章中介绍了**两种量化模块**可供选择：Straight Through Gumbel-Softmax与Online K-means clustering（后者类似于VQ-VAE中的量化模块），如下图所示：
 
-   ![image-20240921174615082](./assets/image-20240921174615082.png)
+   ![image-20240921174615082](./assets/image-20240921174615082-8298288.png)
 
-   ![image-20240921182220212](./assets/image-20240921182220212.png)
+   ![image-20240921182220212](./assets/image-20240921182220212-8298288.png)
 
    ##### 3.1.4 Effectiveness of self-supervised pre-training for speech recognition
 
    > 当使用自监督学习方法逐步得到预训练的vq-wav2vec模型和BERT模型之后，不同于**vq-wav2vec将BERT作为特征提取器**，再使用BERT提供的语义特征有监督地训练下游ASR模型，**Discrete BERT直接将BERT作为ASR模型**，通过加上随机初始化的linear层并且使用CTC loss有监督地fine-tune BERT模型来进行语音识别任务。
 
-   ![image-20240921172415647](./assets/image-20240921172415647.png)
+   ![image-20240921172415647](./assets/image-20240921172415647-8298288.png)
 
    **Discrete BERT**的训练框架如上左图所示。我们首先使用预训练的vq-wav2vec模型为输入音频得到**量化**的特征向量（也可以是MFCC或FBANK声学特征的k-means聚类中心，只要是每个特征向量都是codebook中的某个id对应的向量即可）。然后，我们便可以将量化的特征向量作为输入，按照BERT的masked prediction的自监督训练方式（正例是mask之前的输入中的id，负例是codebook中的其他id）训练出BERT模型。
 
@@ -152,13 +224,13 @@
    >
    >  不同于Discrete BERT需要先训练一个vq-wav2vec作为特征提取器，再预训练+微调BERT用于语音识别任务，wav2vec 2.0提出了一个端到端的架构，把vq-wav2vec中的Gumbel softmax量化模块和BERT结合到一起，只需要一步预训练+微调即可。
 
-   ![image-20240921182716148](./assets/image-20240921182716148.png)
+   ![image-20240921182716148](./assets/image-20240921182716148-8298288.png)
 
    ##### 3.1.6 wav2vec-U: [Unsupervised Speech Recognition](https://link.zhihu.com/?target=https%3A//arxiv.org/abs/2105.11084)
 
    > **完全不使用任何的标注数据，通过无监督的方法也能够训练出很好的ASR模型**
 
-   ![image-20240921183210901](./assets/image-20240921183210901.png)
+   ![image-20240921183210901](./assets/image-20240921183210901-8298288.png)
 
    由于作者发现相比于word或者letter，模型更容易学习从audio到phoneme（音素）之间的映射，wav2vec-U的无监督学习方法首先利用预训练wav2vec 2.0 large模型从**audio**中提取得到**语义表征序列**，然后通过量化再单元化分割得到更短的**单元表征序列**，接着通过使用无监督对抗训练的生成器由单元表征序列生成**音素序列**，于是我们就可以得到对于的**预测文本**。
 
@@ -184,7 +256,7 @@
    >
    > 不同于wav2vec 2.0在模型中引入了**量化模块**，在自监督预训练时采用**端到端的方式进行联合训练**，HuBERT模型**事先**通过无监督方法训练得到聚类模型，为所有无标注语音信号生成**离散化的目标序列**，再直接使用**MLM自监督预训练方法**预测掩码位置的目标值。通过使用更为简洁的自监督训练方法，HuBERT的预训练进程往往比wav2vec 2.0更加**稳定**，尤其当我们为了提升ASR性能的绝对数值而需要训练很大的预训练模型时。此外，不同于wav2vec 2.0模型在预训练时**实时**地从量化模块中的codebook通过概率分布选择**正例**，从相同句子的其他位置随机选择**负例**，用于计算**对比学习**的损失函数，HuBERT模型在离线聚类的步骤中**提前确定**了每段语音信号所对应的**聚类中心序列**（也就是离散化的目标序列），以及聚类中心的总数量，再使用交叉熵损失函数进行模型的预训练。由于无监督聚类模型提供的离散化的目标序列中不仅仅包含与ASR相关的词汇信息，还包含着说话者、情感等其他方面的信息，预训练得到的HuBERT模型能够学习到**更丰富的多层面的语音信息**，从而在多种语音处理下游任务中展现出**更强的泛化性能**。
 
-   ![image-20240921184121979](./assets/image-20240921184121979.png)
+   ![image-20240921184121979](./assets/image-20240921184121979-8298288.png)
 
    ##### 3.1.9 wav2vec-U 2.0
 
@@ -192,7 +264,7 @@
    >
    > 新一代的改进版本wav2vec-U 2.0，通过去除了wav2vec-U中的语音预处理步骤，大大**简化了整体的模型架构**，并使得模型可以**端到端地进行无监督的训练**；通过在无监督训练中引入自监督学习目标，最终实现了无监督语音识别的**进一步性能提升**。
 
-   ![image-20240921184408584](./assets/image-20240921184408584.png)
+   ![image-20240921184408584](./assets/image-20240921184408584-8298288.png)
 
    #### 3.2 acoustic tokens
 
@@ -204,7 +276,7 @@
 
    > [[2107.03312\] SoundStream: An End-to-End Neural Audio Codec (arxiv.org)](https://arxiv.org/abs/2107.03312)
 
-   ![image-20240920230536188](./assets/image-20240920230536188.png)
+   ![image-20240920230536188](./assets/image-20240920230536188-8298288.png)
 
    1. Task: text-to-speech and speech enhancement
    2. RVQ
@@ -218,7 +290,7 @@
    >
    >  从框架结构来看，SoundStream和EnCodec大体是一样的，包括[损失函数，区别是其中的实现细节和功能偏向。和SoundStream一样，也是实时的端到端音频编解码器，采用encoder-decoder结构，但是EnCodec模型还包含了序列建模部分（LSTM)，这一点与SoundStream是不同的，SoundStream只有卷积结构。encoder-decoder的结构在很多语音相关的任务上表现得非常好，包括分离和加强，神经网络vocoders，和编解码器。
 
-   ![image-20240920165614944](./assets/image-20240920165614944.png)
+   ![image-20240920165614944](./assets/image-20240920165614944-8298288.png)
 
    * EnCodec applies Residual Vector Quantization(RVQ) on the output of the convolutional-based encoder. A pre-trained EnCodec processes 24 kHz audio at varying bitrates, which generates 75 Hz embeddings from 24 kHz inputs. When doing variable bandwidth training, we select randomly a number of codebooks as a multiple of 4, i.e. corresponding to a bandwidth 1.5, 3, 6, 12 or 24 kbps at 24 kHz.
 
@@ -239,7 +311,7 @@
    1. motivation:  第一层codebook能存储更多的信息，因而我们分组,从而可以使用更多codebooks应用在第一层，让这些codebooks在压缩方面能发挥更大的作用，从而减少codebooks的数量。
    2. Methods： 
 
-   ![image-20240921155823593](./assets/image-20240921155823593.png)
+   ![image-20240921155823593](./assets/image-20240921155823593-8298288.png)
 
    ##### 3.2.4 DAC (Descript Audio Codec (.dac): High-Fidelity Audio Compression with Improved RVQGAN)
 
@@ -269,7 +341,7 @@
 
    > Our model is built on the framework of RVQ-GANs, following the same pattern as SoundStream and EnCodec.To achieve a hierarchical modeling of diverse information across different RVQ layers, we employ the 9th layer HuBERT representation or the average representation across all HuBERT layers as semantic teachers as semantic teacher to continuous representation distill for the first quantizer, enabling it to capture content information. Leveraginga residual structure enables the subsequent quantizers to complement the remaining paralinguisticinformation.
 
-   ![image-20240921111712468](./assets/image-20240921111712468.png)
+   ![image-20240921111712468](./assets/image-20240921111712468-8298288.png)
 
    
 
